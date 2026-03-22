@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>Migration Prestashop vers Shopify : guide complet — FreelanceAdvisor</title>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-MDTZP8T9');</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;background:#fff;color:#333;line-height:1.9;font-size:17px}a{color:#1a6dba}a:hover{color:#0d4a80}.hd{border-bottom:1px solid #ccc;padding:14px 20px}.hd-in{max-width:720px;margin:0 auto;display:flex;align-items:baseline;justify-content:space-between}.hd-logo{font-weight:bold;font-size:16px;color:#222;text-decoration:none;font-family:Verdana,sans-serif}.main{max-width:720px;margin:0 auto;padding:30px 20px 60px}.main h1{font-size:26px;line-height:1.35;color:#111;margin-bottom:8px}@media(max-width:600px){.main h1{font-size:21px}}.byline{font-size:13px;color:#999;margin-bottom:20px;font-family:Verdana,sans-serif}.main p{margin-bottom:16px}.main h2{font-size:21px;color:#111;margin:32px 0 12px;padding-top:15px}.main h3{font-size:18px;color:#222;margin:20px 0 6px}.main ul,.main ol{margin:0 0 16px 24px}.main li{margin-bottom:4px}.main hr{border:none;border-top:1px solid #ddd;margin:30px 0}.img{width:100%;height:auto;display:block;margin:20px 0;border:1px solid #e5e5e5}.warn{background:#fff8dc;border:1px solid #e6d590;padding:12px 16px;margin:16px 0;font-size:15px}.related{background:#f7f7f7;border:1px solid #eee;padding:16px;margin:30px 0}.related strong{font-family:Verdana,sans-serif;font-size:12px;text-transform:uppercase;color:#999;letter-spacing:.3px}.related ul{margin:8px 0 0 20px;list-style:disc}.related a{font-size:15px}.ft{max-width:720px;margin:0 auto;padding:15px 20px;border-top:1px solid #ddd;font-size:11px;color:#bbb;font-family:Verdana,sans-serif}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MDTZP8T9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<div class="hd"><div class="hd-in"><a class="hd-logo" href="/">FreelanceAdvisor.fr</a></div></div>
+<div class="main">
+
+<h1>Migration Prestashop vers Shopify : guide complet</h1>
+<div class="byline">Par <strong>Laurent Martin</strong> · <span id="maj"></span> · 11 min de lecture</div>
+
+<img class="img" src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=720&h=400&fit=crop" alt="Migration e-commerce">
+
+<p>De plus en plus de marchands envisagent de quitter Prestashop pour Shopify. Les raisons sont variées : maintenance trop lourde, difficulté à trouver des développeurs Prestashop compétents, ou simplement l'envie de simplifier. Mais une migration mal gérée peut détruire votre SEO et vos ventes du jour au lendemain.</p>
+
+<div class="warn"><strong>Important :</strong> une migration e-commerce n'est pas un simple déménagement. C'est une opération chirurgicale. Si votre boutique actuelle génère du trafic organique, chaque erreur technique peut vous coûter des mois de référencement.</div>
+
+<h2>Ce qu'il faut migrer</h2>
+
+<p>Voici la liste complète de ce qui doit être transféré d'un CMS à l'autre. Si votre prestataire en oublie un seul, vous aurez des problèmes :</p>
+
+<ul>
+<li><strong>Produits</strong> — fiches, descriptions, images, variantes, prix, stocks, poids, métadonnées SEO</li>
+<li><strong>Catégories</strong> — arborescence, descriptions, images, URLs</li>
+<li><strong>Clients</strong> — comptes, adresses, historique de commandes (les mots de passe ne sont pas transférables)</li>
+<li><strong>Commandes</strong> — historique complet pour le SAV et la comptabilité</li>
+<li><strong>URLs et redirections 301</strong> — chaque ancienne URL doit pointer vers la nouvelle. C'est le point le plus critique pour le SEO</li>
+<li><strong>Contenu CMS</strong> — pages statiques, blog, FAQ</li>
+<li><strong>Configurations</strong> — moyens de paiement, transporteurs, règles de TVA, emails transactionnels</li>
+</ul>
+
+<h2>Les 5 étapes d'une migration réussie</h2>
+
+<h3>Étape 1 : L'audit technique (1-2 jours)</h3>
+
+<p>Avant de toucher à quoi que ce soit, on fait un inventaire complet : nombre de produits, de catégories, de clients, de pages CMS. On identifie les modules Prestashop custom qui n'ont pas d'équivalent Shopify. On crawle le site existant pour avoir la liste complète des URLs indexées. Sans cet audit, vous partez à l'aveugle.</p>
+
+<h3>Étape 2 : La configuration Shopify (2-3 jours)</h3>
+
+<p>On installe Shopify, on choisit le thème, on configure les bases : moyens de paiement, transporteurs, TVA, emails. On crée la structure de catégories (collections) en miroir de l'existant. On ne migre pas encore les données — on prépare le terrain.</p>
+
+<h3>Étape 3 : La migration des données (3-5 jours)</h3>
+
+<p>C'est le gros morceau. Plusieurs approches possibles : import CSV natif Shopify (limité), app de migration type Cart2Cart ou LitExtension (automatisé mais pas toujours fiable), ou scripts custom (le plus fiable pour les gros catalogues). Les images sont souvent le poste le plus long — un catalogue de 5 000 produits avec 4 photos chacun = 20 000 images à transférer.</p>
+
+<h3>Étape 4 : Les redirections 301 (1-2 jours)</h3>
+
+<p>C'est l'étape que tout le monde bâcle et qui fait le plus de dégâts. Chaque URL de votre ancien site Prestashop doit rediriger vers l'URL correspondante sur Shopify. Les URLs changent de format (Prestashop utilise des IDs numériques, Shopify utilise des slugs). Il faut mapper chaque ancienne URL vers la nouvelle.</p>
+
+<p>Sur un site de 500 produits et 50 catégories, c'est environ 600 redirections à configurer. Si vous les oubliez, Google va indexer des pages 404, votre trafic organique va chuter, et il faudra des mois pour récupérer.</p>
+
+<h3>Étape 5 : Le test et le basculement (1-2 jours)</h3>
+
+<p>On teste tout sur un environnement de staging : navigation, tunnel d'achat, paiement, emails, performances. On vérifie les redirections sur un échantillon. Puis on bascule le domaine vers Shopify. Idéalement, on le fait un mardi ou mercredi matin (pas un vendredi, jamais un vendredi).</p>
+
+<h2>Combien ça coûte</h2>
+
+<p>Pour une boutique standard (200-500 produits, structure simple) : comptez 2 000 à 5 000€ avec un freelance senior. Pour un gros catalogue (+5 000 produits, modules custom) : 5 000 à 15 000€. Une agence facturera 2 à 3x ces montants.</p>
+
+<p>La durée typique : 2 à 4 semaines pour une boutique standard, 4 à 8 semaines pour un gros projet.</p>
+
+<h2>Les erreurs les plus courantes</h2>
+
+<ul>
+<li><strong>Oublier les redirections 301</strong> — on l'a dit, mais ça mérite d'être répété. C'est l'erreur n°1</li>
+<li><strong>Migrer un vendredi</strong> — si quelque chose casse, vous perdez le weekend entier de ventes</li>
+<li><strong>Ne pas prévenir les clients</strong> — les mots de passe ne sont pas transférables, il faut envoyer un email de réinitialisation</li>
+<li><strong>Ignorer les modules custom</strong> — ce module Prestashop que vous utilisez depuis 3 ans n'existe peut-être pas sur Shopify</li>
+<li><strong>Ne pas tester le paiement</strong> — faites une vraie commande test avec un vrai paiement avant le lancement</li>
+</ul>
+
+<h2>Faut-il migrer ?</h2>
+
+<p>Pas toujours. Si votre boutique Prestashop fonctionne bien, que vous avez un bon développeur, et que vous n'avez pas de problèmes de maintenance — il n'y a pas de raison de migrer. La migration a un coût, un risque, et un temps d'adaptation. Migrez si vous avez une vraie raison business, pas parce que Shopify est "tendance".</p>
+
+<hr>
+
+<p>Si vous décidez de migrer, choisissez un prestataire qui a déjà fait des migrations Prestashop → Shopify. Demandez des exemples concrets, des références, et surtout son process pour les redirections 301. C'est le test qui sépare les pros des amateurs.</p>
+
+<div class="related">
+<strong>Articles liés</strong>
+<ul>
+<li><a href="shopify-vs-prestashop.html">Shopify vs Prestashop : lequel choisir ?</a></li>
+<li><a href="comparatif-shopify.html">Top 5 Meilleurs Freelances Shopify</a></li>
+<li><a href="cout-site-ecommerce.html">Combien coûte un site e-commerce ?</a></li>
+</ul>
+</div>
+
+</div>
+<footer class="ft">© 2026 FreelanceAdvisor.fr</footer>
+<script>(function(){var d=new Date(Date.now()-8*86400000);var m=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];document.getElementById('maj').textContent=d.getDate()+' '+m[d.getMonth()]+' '+d.getFullYear();})()</script>
+</body>
+</html>
