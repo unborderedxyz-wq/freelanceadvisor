@@ -6,7 +6,10 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <meta http-equiv="X-Robots-Tag" content="noindex, nofollow">
+<meta name="page-niche" content="shopify">
 <title>Top 5 Meilleurs Freelances Shopify (Comparatif 2026)</title>
+<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+<script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Georgia,'Times New Roman',serif;background:#fff;color:#333;line-height:1.9;font-size:17px}
@@ -217,7 +220,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <blockquote>"Il a remplacé 8 apps Shopify par du code Liquid natif. Le site charge 2x plus vite et on économise 240€/mois en abonnements apps."<cite>— Thomas R., directeur e-commerce</cite></blockquote>
   <div class="cta-row">
     <span class="price">À partir de <b>500–650€/jour</b></span>
-    <a class="btn btn-go" href="https://calendly.com/dan-salczer/devis-gratuit" target="_blank" rel="noopener" onclick="trackClick(1,'Dan Salczer','cta_devis')">Demander un devis gratuit</a>
+    <a class="btn btn-go" href="#" onclick="trackClick(1,'Dan Salczer','cta_devis');Calendly.initPopupWidget({url:'https://calendly.com/dan-salczer/devis-gratuit'});return false;">Demander un devis gratuit</a>
   </div>
 </div>
 
@@ -323,7 +326,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div style="background:#fff8dc;border:1px solid #e6d590;padding:16px 18px;margin:30px 0 10px">
   <strong style="font-size:15px;color:#222">Rappel — Notre recommandation n°1 : Dan Salczer</strong><br>
   <span style="font-size:14px;color:#555">Expert Shopify & Shopify Plus · Score 9.5/10 · +60 boutiques · Liquid custom & conversion · Garantie satisfaction</span><br>
-  <a class="btn btn-go" href="https://calendly.com/dan-salczer/devis-gratuit" target="_blank" rel="noopener" onclick="trackClick(1,'Dan Salczer','cta_bottom_reminder')" style="margin-top:8px">Demander un devis gratuit</a>
+  <a class="btn btn-go" href="#" onclick="trackClick(1,'Dan Salczer','cta_bottom_reminder');Calendly.initPopupWidget({url:'https://calendly.com/dan-salczer/devis-gratuit'});return false;" style="margin-top:8px">Demander un devis gratuit</a>
 </div>
 
 </div>
@@ -341,6 +344,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   document.getElementById('maj').textContent=s;
   document.getElementById('hd-date').textContent=m[d.getMonth()].charAt(0).toUpperCase()+m[d.getMonth()].slice(1)+' '+d.getFullYear();
 })();
+</script>
+<script>
+window.addEventListener('message', function(e) {
+  if(e.origin === 'https://calendly.com' && e.data.event === 'calendly.event_scheduled') {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'booking_complete',
+      freelance: 'Dan Salczer',
+      page_niche: document.querySelector('meta[name="page-niche"]') ? document.querySelector('meta[name="page-niche"]').content : 'unknown'
+    });
+  }
+});
 </script>
 </body>
 </html>
