@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreelanceAdvisor — Dashboard Funnel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px}
+.login-screen h1{font-size:22px;color:#1a1a2e}
+.login-screen p{color:#666;font-size:14px;max-width:400px;text-align:center}
+.login-btn{background:#2c6fbb;color:#fff;border:none;padding:12px 32px;font-size:15px;border-radius:6px;cursor:pointer;font-weight:600}
+.login-btn:hover{background:#1d5a9e}
+.header{background:#1a1a2e;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:600}
+.header-right{display:flex;align-items:center;gap:12px}
+.header select,.header button{background:#2c3e6b;color:#fff;border:1px solid #3d5280;padding:6px 12px;border-radius:4px;font-size:13px;cursor:pointer}
+.header button.logout{background:#cc4a3a;border-color:#cc4a3a}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:8px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.kpi-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-value{font-size:28px;font-weight:700;color:#2c6fbb}
+.kpi-value.green{color:#2a8c4a}
+.kpi-value.red{color:#cc4a3a}
+.kpi-sub{font-size:12px;color:#aaa;margin-top:2px}
+.section{background:#fff;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:20px}
+.section h2{font-size:15px;font-weight:600;margin-bottom:14px;color:#1a1a2e;border-bottom:1px solid #eee;padding-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #eee}
+td{padding:8px 10px;border-bottom:1px solid #f0f0f0}
+tr:hover{background:#f8f9fc}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-blue{background:#e8f0fe;color:#2c6fbb}
+.badge-green{background:#e6f4ea;color:#2a8c4a}
+.badge-red{background:#fce8e6;color:#cc4a3a}
+.badge-gray{background:#f0f0f0;color:#666}
+.funnel-bar{height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;margin-top:4px}
+.funnel-fill{height:100%;background:#2c6fbb;border-radius:4px;transition:width .5s}
+.loading{text-align:center;padding:40px;color:#888;font-size:14px}
+.error{background:#fce8e6;color:#cc4a3a;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:13px}
+.refresh-info{font-size:11px;color:#aaa;text-align:right;margin-bottom:10px}
+@media(max-width:768px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .container{padding:12px}
+  .kpi-value{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="login-screen" id="login-screen">
+    <h1>FreelanceAdvisor — Dashboard</h1>
+    <p>Connectez-vous avec votre compte Google pour voir les données GA4 en temps réel.</p>
+    <button class="login-btn" id="login-btn" onclick="handleLogin()">Se connecter avec Google</button>
+  </div>
+</div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+// ─── CONFIG ───
+const CLIENT_ID = '774978170378-u0igsu0vtdt28gj52uq31h5rst9pbamb.apps.googleusercontent.com';
+const PROPERTY_ID = '529385366';
+const SCOPES = 'https://www.googleapis.com/auth/analytics.readonly';
+const API_URL = 'https://analyticsdata.googleapis.com/v1beta/properties/' + PROPERTY_ID + ':runReport';
+
+let accessToken = null;
+let tokenClient = null;
+let currentPeriod = '7'; // days
+
+// ─── AUTH ───
+function initTokenClient() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (response) => {
+      if (response.error) {
+        console.error('Auth error:', response);
+        return;
+      }
+      accessToken = response.access_token;
+      showDashboard();
+      fetchAllData();
+    },
+  });
+}
+
+function handleLogin() {
+  if (!tokenClient) {
+    // Wait for GIS to load
+    setTimeout(() => {
+      initTokenClient();
+      tokenClient.requestAccessToken();
+    }, 500);
+  } else {
+    tokenClient.requestAccessToken();
+  }
+}
+
+function handleLogout() {
+  if (accessToken) {
+    google.accounts.oauth2.revoke(accessToken);
+    accessToken = null;
+  }
+  document.getElementById('app').innerHTML = `
+    <div class="login-screen">
+      <h1>FreelanceAdvisor — Dashboard</h1>
+      <p>Connectez-vous avec votre compte Google pour voir les données GA4 en temps réel.</p>
+      <button class="login-btn" onclick="handleLogin()">Se connecter avec Google</button>
+    </div>`;
+}
+
+// Wait for GIS library to load
+window.onload = function() {
+  setTimeout(initTokenClient, 1000);
+};
+
+// ─── DASHBOARD UI ───
+function showDashboard() {
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <h1>FreelanceAdvisor — Funnel Dashboard</h1>
+      <div class="header-right">
+        <select id="period-select" onchange="changePeriod(this.value)">
+          <option value="1">Aujourd'hui</option>
+          <option value="7" selected>7 derniers jours</option>
+          <option value="14">14 derniers jours</option>
+          <option value="30">30 derniers jours</option>
+          <option value="90">90 derniers jours</option>
+        </select>
+        <button onclick="fetchAllData()">Rafraîchir</button>
+        <button class="logout" onclick="handleLogout()">Déconnexion</button>
+      </div>
+    </div>
+    <div class="container">
+      <div class="refresh-info" id="refresh-info"></div>
+      <div id="error-box"></div>
+      <div class="kpi-row" id="kpi-row">
+        <div class="kpi"><div class="kpi-label">Chargement...</div><div class="kpi-value">—</div></div>
+      </div>
+      <div class="section" id="funnel-section">
+        <h2>Funnel de conversion</h2>
+        <div class="loading">Chargement des données...</div>
+      </div>
+      <div class="section" id="niche-section">
+        <h2>Performance par niche</h2>
+        <div class="loading">Chargement des données...</div>
+      </div>
+      <div class="section" id="pages-section">
+        <h2>Pages les plus visitées</h2>
+        <div class="loading">Chargement des données...</div>
+      </div>
+      <div class="section" id="clicks-section">
+        <h2>Clics CTA par position</h2>
+        <div class="loading">Chargement des données...</div>
+      </div>
+    </div>`;
+}
+
+function changePeriod(days) {
+  currentPeriod = days;
+  fetchAllData();
+}
+
+// ─── API CALLS ───
+async function ga4Report(body) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + accessToken,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || 'API Error');
+  }
+  return res.json();
+}
+
+function dateRange() {
+  if (currentPeriod === '1') {
+    return [{ startDate: 'today', endDate: 'today' }];
+  }
+  return [{ startDate: currentPeriod + 'daysAgo', endDate: 'today' }];
+}
+
+async function fetchAllData() {
+  document.getElementById('refresh-info').textContent = 'Dernière mise à jour : ' + new Date().toLocaleString('fr-FR');
+  document.getElementById('error-box').innerHTML = '';
+
+  try {
+    await Promise.all([
+      fetchKPIs(),
+      fetchFunnel(),
+      fetchNiches(),
+      fetchPages(),
+      fetchClicks()
+    ]);
+  } catch (err) {
+    document.getElementById('error-box').innerHTML = `<div class="error">Erreur : ${err.message}</div>`;
+    console.error(err);
+  }
+}
+
+// ─── KPIs ───
+async function fetchKPIs() {
+  const data = await ga4Report({
+    dateRanges: dateRange(),
+    metrics: [
+      { name: 'totalUsers' },
+      { name: 'sessions' },
+      { name: 'eventCount' },
+      { name: 'engagedSessions' }
+    ]
+  });
+
+  const ctaData = await ga4Report({
+    dateRanges: dateRange(),
+    metrics: [{ name: 'eventCount' }],
+    dimensionFilter: {
+      filter: {
+        fieldName: 'eventName',
+        stringFilter: { matchType: 'EXACT', value: 'cta_click' }
+      }
+    }
+  });
+
+  const bookingData = await ga4Report({
+    dateRanges: dateRange(),
+    metrics: [{ name: 'eventCount' }],
+    dimensionFilter: {
+      filter: {
+        fieldName: 'eventName',
+        stringFilter: { matchType: 'EXACT', value: 'booking_complete' }
+      }
+    }
+  });
+
+  const row = data.rows?.[0]?.metricValues || [];
+  const users = parseInt(row[0]?.value || 0);
+  const sessions = parseInt(row[1]?.value || 0);
+  const engaged = parseInt(row[3]?.value || 0);
+  const ctaClicks = parseInt(ctaData.rows?.[0]?.metricValues?.[0]?.value || 0);
+  const bookings = parseInt(bookingData.rows?.[0]?.metricValues?.[0]?.value || 0);
+  const engagementRate = sessions > 0 ? ((engaged / sessions) * 100).toFixed(1) : 0;
+  const ctaRate = users > 0 ? ((ctaClicks / users) * 100).toFixed(1) : 0;
+  const bookingRate = ctaClicks > 0 ? ((bookings / ctaClicks) * 100).toFixed(1) : 0;
+
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi">
+      <div class="kpi-label">Visiteurs</div>
+      <div class="kpi-value">${users}</div>
+      <div class="kpi-sub">${sessions} sessions</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Taux d'engagement</div>
+      <div class="kpi-value ${parseFloat(engagementRate) > 50 ? 'green' : ''}">${engagementRate}%</div>
+      <div class="kpi-sub">${engaged} sessions engagées</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Clics CTA</div>
+      <div class="kpi-value">${ctaClicks}</div>
+      <div class="kpi-sub">CTR : ${ctaRate}%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Bookings Calendly</div>
+      <div class="kpi-value green">${bookings}</div>
+      <div class="kpi-sub">Taux : ${bookingRate}%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Coût estimé</div>
+      <div class="kpi-value red">—</div>
+      <div class="kpi-sub">Voir Google Ads</div>
+    </div>
+  `;
+}
+
+// ─── FUNNEL ───
+async function fetchFunnel() {
+  const events = ['page_view', 'ranking_viewed', 'cta_click', 'booking_complete'];
+  const results = {};
+
+  for (const evt of events) {
+    try {
+      const filter = evt === 'page_view' ? {} : {
+        dimensionFilter: {
+          filter: {
+            fieldName: 'eventName',
+            stringFilter: { matchType: 'EXACT', value: evt }
+          }
+        }
+      };
+
+      const data = await ga4Report({
+        dateRanges: dateRange(),
+        metrics: [{ name: evt === 'page_view' ? 'sessions' : 'eventCount' }],
+        ...filter
+      });
+      results[evt] = parseInt(data.rows?.[0]?.metricValues?.[0]?.value || 0);
+    } catch (e) {
+      results[evt] = 0;
+    }
+  }
+
+  const total = results['page_view'] || 1;
+  const funnelSteps = [
+    { name: 'Visites', count: results['page_view'], pct: 100 },
+    { name: 'Ranking vu', count: results['ranking_viewed'], pct: ((results['ranking_viewed'] / total) * 100).toFixed(1) },
+    { name: 'Clic CTA', count: results['cta_click'], pct: ((results['cta_click'] / total) * 100).toFixed(1) },
+    { name: 'Booking', count: results['booking_complete'], pct: ((results['booking_complete'] / total) * 100).toFixed(1) }
+  ];
+
+  let html = '<table><tr><th>Étape</th><th>Nombre</th><th>% du total</th><th>Conversion</th><th></th></tr>';
+  for (let i = 0; i < funnelSteps.length; i++) {
+    const s = funnelSteps[i];
+    const convRate = i > 0 && funnelSteps[i-1].count > 0 
+      ? ((s.count / funnelSteps[i-1].count) * 100).toFixed(1) + '%' 
+      : '—';
+    const badge = i === 0 ? 'badge-blue' : parseFloat(s.pct) > 10 ? 'badge-green' : parseFloat(s.pct) > 0 ? 'badge-blue' : 'badge-gray';
+    html += `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${s.count}</td>
+      <td><span class="badge ${badge}">${s.pct}%</span></td>
+      <td>${convRate}</td>
+      <td><div class="funnel-bar"><div class="funnel-fill" style="width:${s.pct}%"></div></div></td>
+    </tr>`;
+  }
+  html += '</table>';
+  document.getElementById('funnel-section').innerHTML = '<h2>Funnel de conversion</h2>' + html;
+}
+
+// ─── NICHES ───
+async function fetchNiches() {
+  try {
+    const data = await ga4Report({
+      dateRanges: dateRange(),
+      dimensions: [{ name: 'customEvent:page_niche' }],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'eventCount' },
+        { name: 'engagedSessions' }
+      ],
+      dimensionFilter: {
+        filter: {
+          fieldName: 'customEvent:page_niche',
+          stringFilter: { matchType: 'FULL_REGEXP', value: '.+' }
+        }
+      }
+    });
+
+    if (!data.rows || data.rows.length === 0) {
+      document.getElementById('niche-section').innerHTML = '<h2>Performance par niche</h2><p style="color:#888;font-size:13px">Pas encore de données par niche.</p>';
+      return;
+    }
+
+    let html = '<table><tr><th>Niche</th><th>Sessions</th><th>Events</th><th>Engagement</th></tr>';
+    for (const row of data.rows) {
+      const niche = row.dimensionValues[0].value;
+      const sessions = parseInt(row.metricValues[0].value);
+      const events = parseInt(row.metricValues[1].value);
+      const engaged = parseInt(row.metricValues[2].value);
+      const engRate = sessions > 0 ? ((engaged / sessions) * 100).toFixed(0) : 0;
+      html += `<tr>
+        <td><span class="badge badge-blue">${niche}</span></td>
+        <td>${sessions}</td>
+        <td>${events}</td>
+        <td>${engRate}%</td>
+      </tr>`;
+    }
+    html += '</table>';
+    document.getElementById('niche-section').innerHTML = '<h2>Performance par niche</h2>' + html;
+  } catch (e) {
+    document.getElementById('niche-section').innerHTML = '<h2>Performance par niche</h2><p style="color:#888;font-size:13px">Dimension page_niche non disponible. Les données apparaîtront après les premiers clics.</p>';
+  }
+}
+
+// ─── PAGES ───
+async function fetchPages() {
+  const data = await ga4Report({
+    dateRanges: dateRange(),
+    dimensions: [{ name: 'pagePath' }],
+    metrics: [
+      { name: 'sessions' },
+      { name: 'engagedSessions' }
+    ],
+    orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    limit: 15
+  });
+
+  if (!data.rows) {
+    document.getElementById('pages-section').innerHTML = '<h2>Pages les plus visitées</h2><p style="color:#888;font-size:13px">Pas encore de données.</p>';
+    return;
+  }
+
+  let html = '<table><tr><th>Page</th><th>Sessions</th><th>Engagées</th><th>Taux</th></tr>';
+  for (const row of data.rows) {
+    const page = row.dimensionValues[0].value;
+    const sessions = parseInt(row.metricValues[0].value);
+    const engaged = parseInt(row.metricValues[1].value);
+    const rate = sessions > 0 ? ((engaged / sessions) * 100).toFixed(0) : 0;
+    const isComparatif = page.includes('comparatif');
+    const badgeClass = isComparatif ? 'badge-green' : 'badge-gray';
+    html += `<tr>
+      <td>${page} ${isComparatif ? '<span class="badge badge-green">funnel</span>' : ''}</td>
+      <td>${sessions}</td>
+      <td>${engaged}</td>
+      <td>${rate}%</td>
+    </tr>`;
+  }
+  html += '</table>';
+  document.getElementById('pages-section').innerHTML = '<h2>Pages les plus visitées</h2>' + html;
+}
+
+// ─── CTA CLICKS BY POSITION ───
+async function fetchClicks() {
+  try {
+    const data = await ga4Report({
+      dateRanges: dateRange(),
+      dimensions: [{ name: 'customEvent:click_position' }],
+      metrics: [{ name: 'eventCount' }],
+      dimensionFilter: {
+        filter: {
+          fieldName: 'eventName',
+          stringFilter: { matchType: 'EXACT', value: 'cta_click' }
+        }
+      },
+      orderBys: [{ dimension: { dimensionName: 'customEvent:click_position' }, desc: false }]
+    });
+
+    if (!data.rows || data.rows.length === 0) {
+      document.getElementById('clicks-section').innerHTML = '<h2>Clics CTA par position</h2><p style="color:#888;font-size:13px">Pas encore de clics CTA.</p>';
+      return;
+    }
+
+    const totalClicks = data.rows.reduce((sum, r) => sum + parseInt(r.metricValues[0].value), 0);
+    let html = '<table><tr><th>Position</th><th>Clics</th><th>% du total</th><th></th></tr>';
+    for (const row of data.rows) {
+      const pos = row.dimensionValues[0].value;
+      const clicks = parseInt(row.metricValues[0].value);
+      const pct = totalClicks > 0 ? ((clicks / totalClicks) * 100).toFixed(0) : 0;
+      const badge = pos === '1' ? 'badge-green' : 'badge-gray';
+      html += `<tr>
+        <td><span class="badge ${badge}">Position ${pos}</span></td>
+        <td><strong>${clicks}</strong></td>
+        <td>${pct}%</td>
+        <td><div class="funnel-bar"><div class="funnel-fill" style="width:${pct}%;background:${pos === '1' ? '#2a8c4a' : '#2c6fbb'}"></div></div></td>
+      </tr>`;
+    }
+    html += `<tr style="font-weight:600;border-top:2px solid #ddd"><td>Total</td><td>${totalClicks}</td><td>100%</td><td></td></tr>`;
+    html += '</table>';
+    document.getElementById('clicks-section').innerHTML = '<h2>Clics CTA par position</h2>' + html;
+  } catch (e) {
+    document.getElementById('clicks-section').innerHTML = '<h2>Clics CTA par position</h2><p style="color:#888;font-size:13px">Dimension click_position non disponible. Les données apparaîtront après les premiers clics CTA.</p>';
+  }
+}
+</script>
+</body>
+</html>
