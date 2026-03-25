@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>FreelanceAdvisor — Dashboard Funnel</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -12,12 +13,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .login-screen p{color:#666;font-size:14px;max-width:400px;text-align:center}
 .login-btn{background:#2c6fbb;color:#fff;border:none;padding:12px 32px;font-size:15px;border-radius:6px;cursor:pointer;font-weight:600}
 .login-btn:hover{background:#1d5a9e}
-.header{background:#1a1a2e;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header{background:#1a1a2e;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .header h1{font-size:18px;font-weight:600}
-.header-right{display:flex;align-items:center;gap:12px}
+.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .header select,.header button{background:#2c3e6b;color:#fff;border:1px solid #3d5280;padding:6px 12px;border-radius:4px;font-size:13px;cursor:pointer}
 .header button.logout{background:#cc4a3a;border-color:#cc4a3a}
+.filter-active{background:#2a8c4a !important;border-color:#2a8c4a !important}
 .container{max-width:1200px;margin:0 auto;padding:20px}
+.filter-info{background:#e8f0fe;color:#2c6fbb;padding:8px 14px;border-radius:6px;margin-bottom:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px}
+.filter-info .dot{width:8px;height:8px;border-radius:50%;background:#2a8c4a;display:inline-block}
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
 .kpi{background:#fff;border-radius:8px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .kpi-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
@@ -45,6 +49,7 @@ tr:hover{background:#f8f9fc}
   .kpi-row{grid-template-columns:repeat(2,1fr)}
   .container{padding:12px}
   .kpi-value{font-size:22px}
+  .header{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -70,7 +75,8 @@ const API_URL = 'https://analyticsdata.googleapis.com/v1beta/properties/' + PROP
 
 let accessToken = null;
 let tokenClient = null;
-let currentPeriod = '7'; // days
+let currentPeriod = '7';
+let currentFilter = 'all'; // 'all', 'france', 'ads'
 
 // ─── AUTH ───
 function initTokenClient() {
@@ -91,7 +97,6 @@ function initTokenClient() {
 
 function handleLogin() {
   if (!tokenClient) {
-    // Wait for GIS to load
     setTimeout(() => {
       initTokenClient();
       tokenClient.requestAccessToken();
@@ -114,10 +119,82 @@ function handleLogout() {
     </div>`;
 }
 
-// Wait for GIS library to load
 window.onload = function() {
   setTimeout(initTokenClient, 1000);
 };
+
+// ─── TRAFFIC FILTER ───
+function getTrafficFilter() {
+  if (currentFilter === 'france') {
+    return {
+      filter: {
+        fieldName: 'country',
+        stringFilter: { matchType: 'EXACT', value: 'France' }
+      }
+    };
+  }
+  if (currentFilter === 'ads') {
+    return {
+      andGroup: {
+        expressions: [
+          {
+            filter: {
+              fieldName: 'sessionSource',
+              stringFilter: { matchType: 'EXACT', value: 'google' }
+            }
+          },
+          {
+            filter: {
+              fieldName: 'sessionMedium',
+              stringFilter: { matchType: 'EXACT', value: 'cpc' }
+            }
+          }
+        ]
+      }
+    };
+  }
+  return null;
+}
+
+// Merge traffic filter with an existing dimensionFilter
+function mergeFilters(existingFilter) {
+  const trafficFilter = getTrafficFilter();
+  if (!trafficFilter && !existingFilter) return undefined;
+  if (!trafficFilter) return existingFilter;
+  if (!existingFilter) return trafficFilter;
+
+  // Both exist — combine with andGroup
+  const existingExpressions = existingFilter.andGroup
+    ? existingFilter.andGroup.expressions
+    : [existingFilter];
+  const trafficExpressions = trafficFilter.andGroup
+    ? trafficFilter.andGroup.expressions
+    : [trafficFilter];
+
+  return {
+    andGroup: {
+      expressions: [...existingExpressions, ...trafficExpressions]
+    }
+  };
+}
+
+function getFilterLabel() {
+  if (currentFilter === 'france') return '<span class="dot"></span> Filtre actif : France uniquement (exclut tes visites Thaïlande)';
+  if (currentFilter === 'ads') return '<span class="dot"></span> Filtre actif : Google Ads uniquement (trafic payant CPC)';
+  return '';
+}
+
+function changeFilter(filter) {
+  currentFilter = filter;
+  // Update button styles
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('filter-active'));
+  document.getElementById('filter-' + filter).classList.add('filter-active');
+  // Update filter info
+  const label = getFilterLabel();
+  document.getElementById('filter-info').innerHTML = label ? label : '';
+  document.getElementById('filter-info').style.display = label ? 'flex' : 'none';
+  fetchAllData();
+}
 
 // ─── DASHBOARD UI ───
 function showDashboard() {
@@ -132,12 +209,16 @@ function showDashboard() {
           <option value="30">30 derniers jours</option>
           <option value="90">90 derniers jours</option>
         </select>
+        <button id="filter-all" class="filter-btn filter-active" onclick="changeFilter('all')">Tout le trafic</button>
+        <button id="filter-france" class="filter-btn" onclick="changeFilter('france')">France uniquement</button>
+        <button id="filter-ads" class="filter-btn" onclick="changeFilter('ads')">Google Ads uniquement</button>
         <button onclick="fetchAllData()">Rafraîchir</button>
         <button class="logout" onclick="handleLogout()">Déconnexion</button>
       </div>
     </div>
     <div class="container">
       <div class="refresh-info" id="refresh-info"></div>
+      <div class="filter-info" id="filter-info" style="display:none"></div>
       <div id="error-box"></div>
       <div class="kpi-row" id="kpi-row">
         <div class="kpi"><div class="kpi-label">Chargement...</div><div class="kpi-value">—</div></div>
@@ -210,36 +291,42 @@ async function fetchAllData() {
 
 // ─── KPIs ───
 async function fetchKPIs() {
+  const baseFilter = getTrafficFilter();
+
   const data = await ga4Report({
     dateRanges: dateRange(),
+    dimensions: currentFilter !== 'all' ? [{ name: currentFilter === 'france' ? 'country' : 'sessionSource' }] : [],
     metrics: [
       { name: 'totalUsers' },
       { name: 'sessions' },
       { name: 'eventCount' },
       { name: 'engagedSessions' }
-    ]
+    ],
+    ...(baseFilter ? { dimensionFilter: baseFilter } : {})
   });
 
+  const ctaFilter = {
+    filter: {
+      fieldName: 'eventName',
+      stringFilter: { matchType: 'EXACT', value: 'cta_click' }
+    }
+  };
   const ctaData = await ga4Report({
     dateRanges: dateRange(),
     metrics: [{ name: 'eventCount' }],
-    dimensionFilter: {
-      filter: {
-        fieldName: 'eventName',
-        stringFilter: { matchType: 'EXACT', value: 'cta_click' }
-      }
-    }
+    dimensionFilter: mergeFilters(ctaFilter)
   });
 
+  const bookingFilter = {
+    filter: {
+      fieldName: 'eventName',
+      stringFilter: { matchType: 'EXACT', value: 'booking_complete' }
+    }
+  };
   const bookingData = await ga4Report({
     dateRanges: dateRange(),
     metrics: [{ name: 'eventCount' }],
-    dimensionFilter: {
-      filter: {
-        fieldName: 'eventName',
-        stringFilter: { matchType: 'EXACT', value: 'booking_complete' }
-      }
-    }
+    dimensionFilter: mergeFilters(bookingFilter)
   });
 
   const row = data.rows?.[0]?.metricValues || [];
@@ -273,11 +360,6 @@ async function fetchKPIs() {
       <div class="kpi-value green">${bookings}</div>
       <div class="kpi-sub">Taux : ${bookingRate}%</div>
     </div>
-    <div class="kpi">
-      <div class="kpi-label">Coût estimé</div>
-      <div class="kpi-value red">—</div>
-      <div class="kpi-sub">Voir Google Ads</div>
-    </div>
   `;
 }
 
@@ -288,19 +370,22 @@ async function fetchFunnel() {
 
   for (const evt of events) {
     try {
-      const filter = evt === 'page_view' ? {} : {
-        dimensionFilter: {
+      let evtFilter = null;
+      if (evt !== 'page_view') {
+        evtFilter = {
           filter: {
             fieldName: 'eventName',
             stringFilter: { matchType: 'EXACT', value: evt }
           }
-        }
-      };
+        };
+      }
+
+      const combined = mergeFilters(evtFilter);
 
       const data = await ga4Report({
         dateRanges: dateRange(),
         metrics: [{ name: evt === 'page_view' ? 'sessions' : 'eventCount' }],
-        ...filter
+        ...(combined ? { dimensionFilter: combined } : {})
       });
       results[evt] = parseInt(data.rows?.[0]?.metricValues?.[0]?.value || 0);
     } catch (e) {
@@ -338,6 +423,14 @@ async function fetchFunnel() {
 // ─── NICHES ───
 async function fetchNiches() {
   try {
+    const nicheFilter = {
+      filter: {
+        fieldName: 'customEvent:page_niche',
+        stringFilter: { matchType: 'FULL_REGEXP', value: '.+' }
+      }
+    };
+    const combined = mergeFilters(nicheFilter);
+
     const data = await ga4Report({
       dateRanges: dateRange(),
       dimensions: [{ name: 'customEvent:page_niche' }],
@@ -346,12 +439,7 @@ async function fetchNiches() {
         { name: 'eventCount' },
         { name: 'engagedSessions' }
       ],
-      dimensionFilter: {
-        filter: {
-          fieldName: 'customEvent:page_niche',
-          stringFilter: { matchType: 'FULL_REGEXP', value: '.+' }
-        }
-      }
+      dimensionFilter: combined
     });
 
     if (!data.rows || data.rows.length === 0) {
@@ -382,6 +470,8 @@ async function fetchNiches() {
 
 // ─── PAGES ───
 async function fetchPages() {
+  const baseFilter = getTrafficFilter();
+
   const data = await ga4Report({
     dateRanges: dateRange(),
     dimensions: [{ name: 'pagePath' }],
@@ -390,7 +480,8 @@ async function fetchPages() {
       { name: 'engagedSessions' }
     ],
     orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-    limit: 15
+    limit: 15,
+    ...(baseFilter ? { dimensionFilter: baseFilter } : {})
   });
 
   if (!data.rows) {
@@ -405,7 +496,6 @@ async function fetchPages() {
     const engaged = parseInt(row.metricValues[1].value);
     const rate = sessions > 0 ? ((engaged / sessions) * 100).toFixed(0) : 0;
     const isComparatif = page.includes('comparatif');
-    const badgeClass = isComparatif ? 'badge-green' : 'badge-gray';
     html += `<tr>
       <td>${page} ${isComparatif ? '<span class="badge badge-green">funnel</span>' : ''}</td>
       <td>${sessions}</td>
@@ -420,16 +510,19 @@ async function fetchPages() {
 // ─── CTA CLICKS BY POSITION ───
 async function fetchClicks() {
   try {
+    const ctaFilter = {
+      filter: {
+        fieldName: 'eventName',
+        stringFilter: { matchType: 'EXACT', value: 'cta_click' }
+      }
+    };
+    const combined = mergeFilters(ctaFilter);
+
     const data = await ga4Report({
       dateRanges: dateRange(),
       dimensions: [{ name: 'customEvent:click_position' }],
       metrics: [{ name: 'eventCount' }],
-      dimensionFilter: {
-        filter: {
-          fieldName: 'eventName',
-          stringFilter: { matchType: 'EXACT', value: 'cta_click' }
-        }
-      },
+      dimensionFilter: combined,
       orderBys: [{ dimension: { dimensionName: 'customEvent:click_position' }, desc: false }]
     });
 
