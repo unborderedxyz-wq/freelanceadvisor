@@ -41,12 +41,14 @@ tr:hover{background:#f8f9fc}
 .badge-blue{background:#e8f0fe;color:#2c6fbb}
 .badge-green{background:#e6f4ea;color:#2a8c4a}
 .badge-red{background:#fce8e6;color:#cc4a3a}
+.badge-orange{background:#fef3e2;color:#c07b20}
 .badge-gray{background:#f0f0f0;color:#666}
 .funnel-bar{height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;margin-top:4px}
 .funnel-fill{height:100%;background:#2c6fbb;border-radius:4px;transition:width .5s}
 .loading{text-align:center;padding:40px;color:#888;font-size:14px}
 .error{background:#fce8e6;color:#cc4a3a;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:13px}
 .refresh-info{font-size:11px;color:#aaa;text-align:right;margin-bottom:10px}
+.query-warning{color:#cc4a3a;font-size:11px;font-weight:600}
 @media(max-width:768px){.kpi-row{grid-template-columns:repeat(2,1fr)}.container{padding:12px}.kpi-value{font-size:22px}.header{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
@@ -62,6 +64,9 @@ const SCOPES='https://www.googleapis.com/auth/analytics.readonly';
 const API_URL='https://analyticsdata.googleapis.com/v1beta/properties/'+PROPERTY_ID+':runReport';
 let accessToken=null,tokenClient=null,currentPeriod='7',currentFilter='all';
 
+// Negative keywords to flag
+const NEGATIVE_KEYWORDS=['gratuit','formation','emploi','cdi','salaire','tuto','tutoriel','cours','apprendre','stage','recrutement','embauche','définition','wikipedia'];
+
 function initTokenClient(){tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,callback:(r)=>{if(r.error)return;accessToken=r.access_token;showDashboard();fetchAllData()}})}
 function handleLogin(){if(!tokenClient){setTimeout(()=>{initTokenClient();tokenClient.requestAccessToken()},500)}else{tokenClient.requestAccessToken()}}
 function handleLogout(){if(accessToken){google.accounts.oauth2.revoke(accessToken);accessToken=null}document.getElementById('app').innerHTML='<div class="login-screen"><h1>FreelanceAdvisor — Dashboard</h1><p>Connectez-vous avec votre compte Google.</p><button class="login-btn" onclick="handleLogin()">Se connecter avec Google</button></div>'}
@@ -75,6 +80,82 @@ function getTrafficFilter(){
 function mergeFilters(ef){const tf=getTrafficFilter();if(!tf&&!ef)return undefined;if(!tf)return ef;if(!ef)return tf;const ee=ef.andGroup?ef.andGroup.expressions:[ef];const te=tf.andGroup?tf.andGroup.expressions:[tf];return{andGroup:{expressions:[...ee,...te]}}}
 function changeFilter(f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('filter-active'));document.getElementById('filter-'+f).classList.add('filter-active');const l=currentFilter==='france'?'<span class="dot"></span> Filtre actif : France uniquement':currentFilter==='ads'?'<span class="dot"></span> Filtre actif : Google Ads uniquement':'';document.getElementById('filter-info').innerHTML=l;document.getElementById('filter-info').style.display=l?'flex':'none';fetchAllData()}
 
+function isNegativeQuery(query){
+  const q=query.toLowerCase();
+  return NEGATIVE_KEYWORDS.some(nk=>q.includes(nk));
+}
+
+// ─── FETCH SEARCH QUERIES ───
+async function fetchSearchQueries(){
+  try{
+    const adsFilter={andGroup:{expressions:[
+      {filter:{fieldName:'sessionSource',stringFilter:{matchType:'EXACT',value:'google'}}},
+      {filter:{fieldName:'sessionMedium',stringFilter:{matchType:'EXACT',value:'cpc'}}}
+    ]}};
+    const d=await ga4Report({
+      dateRanges:dateRange(),
+      dimensions:[{name:'sessionGoogleAdsQuery'},{name:'landingPage'}],
+      metrics:[{name:'sessions'},{name:'engagedSessions'}],
+      dimensionFilter:adsFilter,
+      orderBys:[{metric:{metricName:'sessions'},desc:true}],
+      limit:50
+    });
+    if(!d.rows||!d.rows.length){document.getElementById('search-section').innerHTML='<h2>🔍 Termes de recherche Google Ads</h2><p style="color:#888;font-size:13px">Pas encore de données. Les termes apparaîtront quand Google Ads aura généré des clics.</p>';return}
+    let html='<table><tr><th>Terme recherché</th><th>Page d\'arrivée</th><th>Sessions</th><th>Engagées</th><th>Taux</th><th>Statut</th></tr>';
+    for(const row of d.rows){
+      const query=row.dimensionValues[0].value;
+      const landing=row.dimensionValues[1].value;
+      const sessions=parseInt(row.metricValues[0].value);
+      const engaged=parseInt(row.metricValues[1].value);
+      const rate=sessions>0?((engaged/sessions)*100).toFixed(0):0;
+      const isNeg=isNegativeQuery(query);
+      const isNotSet=query==='(not set)'||query==='';
+      let statusBadge='';
+      if(isNotSet){
+        statusBadge='<span class="badge badge-gray">non disponible</span>';
+      }else if(isNeg){
+        statusBadge='<span class="badge badge-red">⚠️ à exclure</span>';
+      }else if(parseInt(rate)<30){
+        statusBadge='<span class="badge badge-orange">faible engagement</span>';
+      }else{
+        statusBadge='<span class="badge badge-green">✓ pertinent</span>';
+      }
+      const rowStyle=isNeg?'style="background:#fef0f0"':'';
+      html+=`<tr ${rowStyle}><td><strong>${query}</strong>${isNeg?' <span class="query-warning">← mot-clé négatif détecté</span>':''}</td><td>${landing.includes('comparatif')?'<span class="badge badge-green">'+landing+'</span>':landing}</td><td>${sessions}</td><td>${engaged}</td><td>${rate}%</td><td>${statusBadge}</td></tr>`;
+    }
+    html+='</table>';
+    document.getElementById('search-section').innerHTML='<h2>🔍 Termes de recherche Google Ads</h2>'+html;
+  }catch(e){
+    document.getElementById('search-section').innerHTML='<h2>🔍 Termes de recherche Google Ads</h2><p style="color:#888;font-size:13px">Dimension sessionGoogleAdsQuery non disponible. Vérifiez que le lien Google Ads ↔ GA4 est actif.</p>';
+  }
+}
+
+// ─── FETCH SEARCH QUERIES FOR EXPORT ───
+async function fetchSearchQueriesForExport(){
+  try{
+    const adsFilter={andGroup:{expressions:[
+      {filter:{fieldName:'sessionSource',stringFilter:{matchType:'EXACT',value:'google'}}},
+      {filter:{fieldName:'sessionMedium',stringFilter:{matchType:'EXACT',value:'cpc'}}}
+    ]}};
+    const d=await ga4Report({
+      dateRanges:dateRange(),
+      dimensions:[{name:'sessionGoogleAdsQuery'},{name:'landingPage'}],
+      metrics:[{name:'sessions'},{name:'engagedSessions'}],
+      dimensionFilter:adsFilter,
+      orderBys:[{metric:{metricName:'sessions'},desc:true}],
+      limit:50
+    });
+    return (d.rows||[]).map(r=>({
+      query:r.dimensionValues[0].value,
+      landingPage:r.dimensionValues[1].value,
+      sessions:parseInt(r.metricValues[0].value),
+      engaged:parseInt(r.metricValues[1].value),
+      isNegative:isNegativeQuery(r.dimensionValues[0].value)
+    }));
+  }catch(e){return []}
+}
+
+// ─── EXPORT FOR CLAUDE ───
 async function exportForClaude(){
   const btn=document.getElementById('export-btn');btn.textContent='⏳ Collecte...';
   try{
@@ -98,19 +179,21 @@ async function exportForClaude(){
       allData[filter]={kpis:{users,sessions,engaged,ctaClicks,bookings},funnel:{visits:sessions,...funnel},pages,niches,ctaByPosition:ctaPos};
       currentFilter=saved;
     }
-    const json=JSON.stringify({exportDate:new Date().toISOString(),period:currentPeriod+' jours',propertyId:PROPERTY_ID,filters:allData},null,2);
+    // Always fetch search queries (not filter-dependent, always from Google Ads CPC)
+    const searchQueries=await fetchSearchQueriesForExport();
+    const json=JSON.stringify({exportDate:new Date().toISOString(),period:currentPeriod+' jours',propertyId:PROPERTY_ID,filters:allData,searchQueries:searchQueries},null,2);
     await navigator.clipboard.writeText(json);
     btn.textContent='✅ Copié !';btn.classList.add('copied');
     setTimeout(()=>{btn.textContent='📋 Copier pour Claude';btn.classList.remove('copied')},3000);
   }catch(err){btn.textContent='❌ Erreur';console.error(err);setTimeout(()=>{btn.textContent='📋 Copier pour Claude'},3000)}
 }
 
-function showDashboard(){document.getElementById('app').innerHTML=`<div class="header"><h1>FreelanceAdvisor — Funnel Dashboard</h1><div class="header-right"><select id="period-select" onchange="changePeriod(this.value)"><option value="1">Aujourd'hui</option><option value="7" selected>7 derniers jours</option><option value="14">14 derniers jours</option><option value="30">30 derniers jours</option><option value="90">90 derniers jours</option></select><button id="filter-all" class="filter-btn filter-active" onclick="changeFilter('all')">Tout le trafic</button><button id="filter-france" class="filter-btn" onclick="changeFilter('france')">France uniquement</button><button id="filter-ads" class="filter-btn" onclick="changeFilter('ads')">Google Ads uniquement</button><button onclick="fetchAllData()">Rafraîchir</button><button id="export-btn" class="export-btn" onclick="exportForClaude()">📋 Copier pour Claude</button><button class="logout" onclick="handleLogout()">Déconnexion</button></div></div><div class="container"><div class="refresh-info" id="refresh-info"></div><div class="filter-info" id="filter-info" style="display:none"></div><div id="error-box"></div><div class="kpi-row" id="kpi-row"><div class="kpi"><div class="kpi-label">Chargement...</div><div class="kpi-value">—</div></div></div><div class="section" id="funnel-section"><h2>Funnel de conversion</h2><div class="loading">Chargement...</div></div><div class="section" id="niche-section"><h2>Performance par niche</h2><div class="loading">Chargement...</div></div><div class="section" id="pages-section"><h2>Pages les plus visitées</h2><div class="loading">Chargement...</div></div><div class="section" id="clicks-section"><h2>Clics CTA par position</h2><div class="loading">Chargement...</div></div></div>`}
+function showDashboard(){document.getElementById('app').innerHTML=`<div class="header"><h1>FreelanceAdvisor — Funnel Dashboard</h1><div class="header-right"><select id="period-select" onchange="changePeriod(this.value)"><option value="1">Aujourd'hui</option><option value="7" selected>7 derniers jours</option><option value="14">14 derniers jours</option><option value="30">30 derniers jours</option><option value="90">90 derniers jours</option></select><button id="filter-all" class="filter-btn filter-active" onclick="changeFilter('all')">Tout le trafic</button><button id="filter-france" class="filter-btn" onclick="changeFilter('france')">France uniquement</button><button id="filter-ads" class="filter-btn" onclick="changeFilter('ads')">Google Ads uniquement</button><button onclick="fetchAllData()">Rafraîchir</button><button id="export-btn" class="export-btn" onclick="exportForClaude()">📋 Copier pour Claude</button><button class="logout" onclick="handleLogout()">Déconnexion</button></div></div><div class="container"><div class="refresh-info" id="refresh-info"></div><div class="filter-info" id="filter-info" style="display:none"></div><div id="error-box"></div><div class="kpi-row" id="kpi-row"><div class="kpi"><div class="kpi-label">Chargement...</div><div class="kpi-value">—</div></div></div><div class="section" id="funnel-section"><h2>Funnel de conversion</h2><div class="loading">Chargement...</div></div><div class="section" id="search-section"><h2>🔍 Termes de recherche Google Ads</h2><div class="loading">Chargement...</div></div><div class="section" id="niche-section"><h2>Performance par niche</h2><div class="loading">Chargement...</div></div><div class="section" id="pages-section"><h2>Pages les plus visitées</h2><div class="loading">Chargement...</div></div><div class="section" id="clicks-section"><h2>Clics CTA par position</h2><div class="loading">Chargement...</div></div></div>`}
 function changePeriod(d){currentPeriod=d;fetchAllData()}
 
 async function ga4Report(body){const res=await fetch(API_URL,{method:'POST',headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!res.ok){const err=await res.json();throw new Error(err.error?.message||'API Error')}return res.json()}
 function dateRange(){return currentPeriod==='1'?[{startDate:'today',endDate:'today'}]:[{startDate:currentPeriod+'daysAgo',endDate:'today'}]}
-async function fetchAllData(){document.getElementById('refresh-info').textContent='Dernière mise à jour : '+new Date().toLocaleString('fr-FR');document.getElementById('error-box').innerHTML='';try{await Promise.all([fetchKPIs(),fetchFunnel(),fetchNiches(),fetchPages(),fetchClicks()])}catch(err){document.getElementById('error-box').innerHTML=`<div class="error">Erreur : ${err.message}</div>`}}
+async function fetchAllData(){document.getElementById('refresh-info').textContent='Dernière mise à jour : '+new Date().toLocaleString('fr-FR');document.getElementById('error-box').innerHTML='';try{await Promise.all([fetchKPIs(),fetchFunnel(),fetchSearchQueries(),fetchNiches(),fetchPages(),fetchClicks()])}catch(err){document.getElementById('error-box').innerHTML=`<div class="error">Erreur : ${err.message}</div>`}}
 
 async function fetchKPIs(){const bf=getTrafficFilter();const data=await ga4Report({dateRanges:dateRange(),dimensions:currentFilter!=='all'?[{name:currentFilter==='france'?'country':'sessionSource'}]:[],metrics:[{name:'totalUsers'},{name:'sessions'},{name:'eventCount'},{name:'engagedSessions'}],...(bf?{dimensionFilter:bf}:{})});const cf={filter:{fieldName:'eventName',stringFilter:{matchType:'EXACT',value:'cta_click'}}};const ctaData=await ga4Report({dateRanges:dateRange(),metrics:[{name:'eventCount'}],dimensionFilter:mergeFilters(cf)});const bkf={filter:{fieldName:'eventName',stringFilter:{matchType:'EXACT',value:'booking_complete'}}};const bkData=await ga4Report({dateRanges:dateRange(),metrics:[{name:'eventCount'}],dimensionFilter:mergeFilters(bkf)});const row=data.rows?.[0]?.metricValues||[];const u=parseInt(row[0]?.value||0),s=parseInt(row[1]?.value||0),e=parseInt(row[3]?.value||0);const cc=parseInt(ctaData.rows?.[0]?.metricValues?.[0]?.value||0);const bk=parseInt(bkData.rows?.[0]?.metricValues?.[0]?.value||0);const er=s>0?((e/s)*100).toFixed(1):0;const cr=u>0?((cc/u)*100).toFixed(1):0;const br=cc>0?((bk/cc)*100).toFixed(1):0;document.getElementById('kpi-row').innerHTML=`<div class="kpi"><div class="kpi-label">Visiteurs</div><div class="kpi-value">${u}</div><div class="kpi-sub">${s} sessions</div></div><div class="kpi"><div class="kpi-label">Taux d'engagement</div><div class="kpi-value ${parseFloat(er)>50?'green':''}">${er}%</div><div class="kpi-sub">${e} sessions engagées</div></div><div class="kpi"><div class="kpi-label">Clics CTA</div><div class="kpi-value">${cc}</div><div class="kpi-sub">CTR : ${cr}%</div></div><div class="kpi"><div class="kpi-label">Bookings Calendly</div><div class="kpi-value green">${bk}</div><div class="kpi-sub">Taux : ${br}%</div></div>`}
 
