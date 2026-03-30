@@ -66,6 +66,9 @@ body{font-family:'DM Sans',sans-serif;color:var(--dark);background:var(--white);
   .steps-grid{grid-template-columns:1fr}
   .section h2{font-size:24px}
   .final-cta h2{font-size:26px}
+  .hero{padding:40px 20px 70px}
+  .hero-text .value{font-size:14px}
+  .hero-cta{width:100%;text-align:center;padding:16px 24px;font-size:16px}
 }
 </style>
 <!-- Google Tag Manager -->
@@ -239,6 +242,11 @@ document.getElementById('page').innerHTML = ''
   + '<div class="problem-grid">' + problemCards + '</div>'
   + '</div></div>'
 
+  // MID CTA
+  + '<div style="text-align:center;padding:30px 24px;background:var(--white)">'
+  + '<button class="hero-cta" onclick="trackClick(1,\'Dan Salczer\',\'landing_mid\');openCalendly()">Réserver un appel découverte gratuit</button>'
+  + '</div>'
+
   // NUMBERS
   + '<div class="numbers"><div class="numbers-inner">' + numberItems + '</div></div>'
 
@@ -258,15 +266,24 @@ document.getElementById('page').innerHTML = ''
   + testimonialCards
   + '</div></div>'
 
+  // FAQ
+  + '<div class="section"><div style="max-width:800px;margin:0 auto">'
+  + '<h2 style="font-family:\'DM Serif Display\',serif;font-size:28px;margin-bottom:20px">Questions fréquentes</h2>'
+  + '<div style="margin-bottom:16px"><h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Combien ça coûte ?</h3><p style="color:var(--gray);font-size:15px">Mes tarifs sont entre 400 et 600€/jour selon la complexité. L\'appel découverte est gratuit — on discute de votre projet et je vous fais un devis précis.</p></div>'
+  + '<div style="margin-bottom:16px"><h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Combien de temps pour voir des résultats ?</h3><p style="color:var(--gray);font-size:15px">Les optimisations techniques montrent des résultats en 2 à 4 semaines. Une stratégie complète (contenu + technique) prend 3 à 6 mois.</p></div>'
+  + '<div style="margin-bottom:16px"><h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Vous travaillez à distance ?</h3><p style="color:var(--gray);font-size:15px">Oui, 100% de mes clients sont en remote. On communique par visio, Slack ou email selon vos préférences.</p></div>'
+  + '</div></div>'
+
   // FINAL CTA
   + '<div class="final-cta">'
   + '<h2>Prêt à parler de votre projet ?</h2>'
   + '<p>Appel découverte de 30 minutes — gratuit, sans engagement.</p>'
   + '<button class="hero-cta" onclick="trackClick(1,\'Dan Salczer\',\'landing_bottom\');openCalendly()">Réserver mon appel gratuit</button>'
   + '<div class="guarantee">✓ Pré-audit offert pendant l\'appel</div>'
+  + '<p style="color:rgba(255,255,255,.4);font-size:13px;margin-top:16px">Vous préférez écrire ? <a href="mailto:dan@freelanceadvisor.fr" style="color:rgba(255,255,255,.6);text-decoration:underline">dan@freelanceadvisor.fr</a></p>'
   + '</div>'
 
-  + '<div class="footer">© 2026 Dan Salczer — ' + N.title + ' freelance</div>';
+  + '<div class="footer">© 2026 Dan Salczer — ' + N.title + ' freelance · <a href="/mentions-legales" style="color:#bbb">Mentions légales</a></div>';
 
 // Calendly booking tracking
 window.addEventListener('message', function(e) {

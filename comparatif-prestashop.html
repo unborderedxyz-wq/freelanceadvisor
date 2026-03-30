@@ -15,8 +15,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-MDTZP8T9');</script>
 <!-- End Google Tag Manager -->
-<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
-<script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Georgia,'Times New Roman',serif;background:#fff;color:#333;line-height:1.9;font-size:17px}
@@ -88,6 +86,7 @@ a{color:#1a6dba}a:hover{color:#0d4a80}
   .trophy-row{flex-wrap:wrap}
   .art-img{margin:14px 0}
   .pick{font-size:15px}
+  .scores-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 </style>
 <script>
@@ -126,6 +125,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <strong>Notre recommandation :</strong> Dan Salczer — Score 9.6/10<br>
   Expert Prestashop · +80 boutiques · Modules custom & migrations · Garantie satisfaction.<br>
   <a href="#classement" onclick="trackClick(1,'Dan Salczer','quickpick')">Aller au classement ↓</a>
+<a class="btn btn-go" href="#" onclick="trackClick(1,'Dan Salczer','cta_pick');setTimeout(function(){window.location='dan-salczer?niche=prestashop'},200);return false;" style="margin-top:8px">Demander un devis gratuit</a>
 </div>
 
 <p><strong>Sommaire :</strong></p>
@@ -198,7 +198,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <h2 id="classement">Le classement</h2>
 
-<img class="art-img" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=720&h=380&fit=crop&crop=center" alt="Analyse comparative de freelances sur un écran d'ordinateur">
+<img class="art-img" loading="lazy" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=720&h=380&fit=crop&crop=center" alt="Analyse comparative de freelances sur un écran d'ordinateur">
 <div class="art-img-cap">Notre classement repose sur 12 critères mesurables. Photo : Unsplash</div>
 
 <p>Nos 5 meilleurs freelances Prestashop en France, classés par score global sur 10.</p>
@@ -212,7 +212,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
   <h3>Dan Salczer</h3>
   <div class="tagline">Expert Prestashop depuis 2018 · +80 boutiques livrées · Modules custom, migrations, optimisation</div>
-  <table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-hi">9.8</td><td class="val val-hi">9.5</td><td class="val val-hi">9.7</td><td class="val val-hi">9.5</td><td class="val val-hi total">9.6</td></tr></table>
+  <div class="scores-wrap"><table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-hi">9.8</td><td class="val val-hi">9.5</td><td class="val val-hi">9.7</td><td class="val val-hi">9.5</td><td class="val val-hi total">9.6</td></tr></table></div>
   <div class="procon">
     <span class="plus">+</span> Développe ses propres modules custom (pas du copier-coller de marketplace)<br>
     <span class="plus">+</span> Combine dev + SEO technique + UX — un seul interlocuteur pour tout<br>
@@ -236,7 +236,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <span class="entry-pos">N°2</span>
   <h3>Franck Kosellek</h3>
   <div class="tagline">Dev expert Prestashop Fullstack · 15+ ans d'expérience · 70 missions Malt · 560€/jour</div>
-  <table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-hi">8.8</td><td class="val val-ok">7.0</td><td class="val val-hi">8.5</td><td class="val val-ok">7.5</td><td class="val total">8.2</td></tr></table>
+  <div class="scores-wrap"><table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-hi">8.8</td><td class="val val-ok">7.0</td><td class="val val-hi">8.5</td><td class="val val-ok">7.5</td><td class="val total">8.2</td></tr></table></div>
   <div class="procon">
     <span class="plus">+</span> Très expérimenté, 15+ ans sur Prestashop<br>
     <span class="plus">+</span> 19 recommandations positives sur Malt<br>
@@ -256,7 +256,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <span class="entry-pos">N°3</span>
   <h3>Slim Sayari</h3>
   <div class="tagline">Dev expert Prestashop, WordPress, Sylius · Supermalter · 133 projets · Cergy-Pontoise · 400€/jour</div>
-  <table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-hi">8.0</td><td class="val val-ok">6.5</td><td class="val val-hi">8.5</td><td class="val val-ok">7.0</td><td class="val total">7.8</td></tr></table>
+  <div class="scores-wrap"><table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-hi">8.0</td><td class="val val-ok">6.5</td><td class="val val-hi">8.5</td><td class="val val-ok">7.0</td><td class="val total">7.8</td></tr></table></div>
   <div class="procon">
     <span class="plus">+</span> Supermalter — statut premium sur Malt, 133 projets<br>
     <span class="plus">+</span> Multi-CMS : Prestashop, WordPress, Sylius, Symfony<br>
@@ -276,7 +276,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <span class="entry-pos">N°4</span>
   <h3>Marina — Ocreativis</h3>
   <div class="tagline">Experte e-commerce Prestashop · Codeur.com · 1ère au classement Codeur 2026 · 3ème Meilleur Expert E-commerce Awards 2024</div>
-  <table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-ok">7.5</td><td class="val val-ok">7.0</td><td class="val val-hi">8.0</td><td class="val val-ok">6.5</td><td class="val total">7.3</td></tr></table>
+  <div class="scores-wrap"><table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-ok">7.5</td><td class="val val-ok">7.0</td><td class="val val-hi">8.0</td><td class="val val-ok">6.5</td><td class="val total">7.3</td></tr></table></div>
   <div class="procon">
     <span class="plus">+</span> N°1 au classement Codeur 2026, reconnue sur la plateforme<br>
     <span class="plus">+</span> Spécialiste refonte de sites, bonne en design<br>
@@ -296,7 +296,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <span class="entry-pos">N°5</span>
   <h3>Elisabeth Crubillé</h3>
   <div class="tagline">Expert Prestashop, WordPress, SEO, Intégrateur · 145 projets Malt · Paris · 325€/jour</div>
-  <table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-ok">7.0</td><td class="val val-ok">6.5</td><td class="val val-hi">8.0</td><td class="val val-ok">6.0</td><td class="val total">7.0</td></tr></table>
+  <div class="scores-wrap"><table class="scores"><tr class="lbl"><td>Expertise</td><td>SEO/UX/Perf</td><td>Communication</td><td>Garanties</td><td><strong>Global</strong></td></tr><tr><td class="val val-ok">7.0</td><td class="val val-ok">6.5</td><td class="val val-hi">8.0</td><td class="val val-ok">6.0</td><td class="val total">7.0</td></tr></table></div>
   <div class="procon">
     <span class="plus">+</span> 145 projets Malt, 83 notes, très active<br>
     <span class="plus">+</span> Tarif accessible (325€/jour)<br>
@@ -351,18 +351,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   document.getElementById('maj').textContent=s;
   document.getElementById('hd-date').textContent=m[d.getMonth()].charAt(0).toUpperCase()+m[d.getMonth()].slice(1)+' '+d.getFullYear();
 })();
-</script>
-<script>
-window.addEventListener('message', function(e) {
-  if(e.origin === 'https://calendly.com' && e.data.event === 'calendly.event_scheduled') {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-      event: 'booking_complete',
-      freelance: 'Dan Salczer',
-      page_niche: document.querySelector('meta[name="page-niche"]') ? document.querySelector('meta[name="page-niche"]').content : 'unknown'
-    });
-  }
-});
 </script>
 </body>
 </html>
