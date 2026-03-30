@@ -67,7 +67,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--dark);background:var(--white);
   .section h2{font-size:24px}
   .final-cta h2{font-size:26px}
   .hero{padding:40px 20px 70px}
-  .hero-text .value{font-size:14px}
+  .hero-text .value{display:none}
   .hero-cta{width:100%;text-align:center;padding:16px 24px;font-size:16px}
 }
 </style>
@@ -233,6 +233,7 @@ document.getElementById('page').innerHTML = ''
   + '<strong>Moi, je fais les deux.</strong> Audit, stratégie, ET implémentation technique. Un seul interlocuteur, zéro friction.'
   + '</div>'
   + '<button class="hero-cta" onclick="trackClick(1,\'Dan Salczer\',\'landing_hero\');openCalendly()">Réserver un appel découverte gratuit</button>'
+  + '<div style="margin-top:12px;font-size:13px;color:rgba(255,255,255,.5)">⏳ Je prends maximum <strong style="color:rgba(255,255,255,.8)">3 nouveaux projets par mois</strong></div>'
   + '</div></div></div>'
 
   // PROBLEMS
@@ -280,7 +281,23 @@ document.getElementById('page').innerHTML = ''
   + '<p>Appel découverte de 30 minutes — gratuit, sans engagement.</p>'
   + '<button class="hero-cta" onclick="trackClick(1,\'Dan Salczer\',\'landing_bottom\');openCalendly()">Réserver mon appel gratuit</button>'
   + '<div class="guarantee">✓ Pré-audit offert pendant l\'appel</div>'
+  + '<p style="color:rgba(255,255,255,.4);font-size:13px;margin-top:12px">⏳ Prochaines disponibilités : <strong style="color:rgba(255,255,255,.7)">semaine du ' + (function(){var d=new Date();d.setDate(d.getDate()+(7-d.getDay()+1)%7+7);var m=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];return d.getDate()+" "+m[d.getMonth()]})() + '</strong></p>'
   + '<p style="color:rgba(255,255,255,.4);font-size:13px;margin-top:16px">Vous préférez écrire ? <a href="mailto:dan@freelanceadvisor.fr" style="color:rgba(255,255,255,.6);text-decoration:underline">dan@freelanceadvisor.fr</a></p>'
+  + '</div>'
+
+  // FORMULAIRE ALTERNATIF
+  + '<div style="background:var(--white);padding:50px 24px;text-align:center">'
+  + '<div style="max-width:500px;margin:0 auto">'
+  + '<h3 style="font-family:\'DM Serif Display\',serif;font-size:22px;margin-bottom:8px;color:var(--dark)">Vous préférez écrire ?</h3>'
+  + '<p style="color:var(--gray);font-size:14px;margin-bottom:20px">Décrivez votre projet en quelques lignes, je vous réponds sous 24h.</p>'
+  + '<form action="https://formspree.io/f/xgopkrjv" method="POST" style="text-align:left">'
+  + '<input type="email" name="email" placeholder="Votre email" required style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:8px;font-size:15px;font-family:\'DM Sans\',sans-serif;margin-bottom:12px;outline:none">'
+  + '<textarea name="message" placeholder="Décrivez brièvement votre projet et votre besoin..." rows="4" required style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:8px;font-size:15px;font-family:\'DM Sans\',sans-serif;margin-bottom:12px;resize:vertical;outline:none"></textarea>'
+  + '<input type="hidden" name="_subject" value="Nouveau lead FreelanceAdvisor — ' + N.pageNiche + '">'
+  + '<input type="hidden" name="_niche" value="' + N.pageNiche + '">'
+  + '<button type="submit" style="width:100%;padding:14px 24px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif">Envoyer mon message</button>'
+  + '</form>'
+  + '</div>'
   + '</div>'
 
   + '<div class="footer">© 2026 Dan Salczer — ' + N.title + ' freelance · <a href="/mentions-legales" style="color:#bbb">Mentions légales</a></div>';
@@ -289,6 +306,14 @@ document.getElementById('page').innerHTML = ''
 window.addEventListener('message', function(e) {
   if (e.origin === 'https://calendly.com' && e.data.event === 'calendly.event_scheduled') {
     window.dataLayer.push({event:'booking_complete', freelance:'Dan Salczer', page_niche:N.pageNiche});
+  }
+});
+
+// Form submission tracking
+document.addEventListener('submit', function(e) {
+  if (e.target && e.target.action && e.target.action.includes('formspree')) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({event:'form_submit', freelance:'Dan Salczer', page_niche:N.pageNiche});
   }
 });
 </script>
