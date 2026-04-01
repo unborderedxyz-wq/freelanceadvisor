@@ -90,7 +90,8 @@ function dateRange(){return currentPeriod==='1'?[{startDate:'today',endDate:'tod
 
 function showDashboard(){
   document.getElementById('app').innerHTML='<div class="header"><h1>FreelanceAdvisor — Funnel Dashboard</h1><div class="header-right">'
-    +'<select id="period-select" onchange="changePeriod(this.value)"><option value="1">Aujourd\'hui</option><option value="7" selected>7 derniers jours</option><option value="14">14 derniers jours</option><option value="30">30 derniers jours</option><option value="90">90 derniers jours</option></select>'
+    +'<select id="period-select" onchange="changePeriod(this.value)"><option value="1">Aujourd\'hui</option><option value="7" selected>7 derniers jours</option><option value="14">14 derniers jours</option><option value="30">30 derniers jours</option><option value="90">90 derniers jours</option><option value="custom">Personnalisé...</option></select>'
+    +'<span id="custom-period" style="display:none"><input id="custom-days" type="number" min="1" max="365" placeholder="jours" style="width:60px;background:#2c3e6b;color:#fff;border:1px solid #3d5280;padding:6px 8px;border-radius:4px;font-size:13px;text-align:center" onkeydown="if(event.key===\'Enter\')applyCustomPeriod()"><button onclick="applyCustomPeriod()" style="background:#2a8c4a;color:#fff;border:1px solid #2a8c4a;padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;margin-left:4px">OK</button></span>'
     +'<button id="filter-all" class="filter-btn filter-active" onclick="changeFilter(\'all\')">Tout le trafic</button>'
     +'<button id="filter-france" class="filter-btn" onclick="changeFilter(\'france\')">France uniquement</button>'
     +'<button id="filter-ads" class="filter-btn" onclick="changeFilter(\'ads\')">Google Ads uniquement</button>'
@@ -123,7 +124,8 @@ function showDashboard(){
     +'</div>'
     +'</div>';
 }
-function changePeriod(d){currentPeriod=d;fetchAllData()}
+function changePeriod(d){if(d==='custom'){document.getElementById('custom-period').style.display='inline';document.getElementById('custom-days').focus();return}document.getElementById('custom-period').style.display='none';currentPeriod=d;fetchAllData()}
+function applyCustomPeriod(){var v=parseInt(document.getElementById('custom-days').value);if(!v||v<1||v>365)return;currentPeriod=String(v);fetchAllData()}
 
 async function fetchAllData(){
   document.getElementById('refresh-info').textContent='Dernière mise à jour : '+new Date().toLocaleString('fr-FR');
